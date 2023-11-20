@@ -6,10 +6,11 @@ app = FastAPI()
 
 
 @app.get("/")
-def read_root():
-    return {"Hello": "World"}
+async def read_root():
+    return {"Message": "FPI-BitkubBot V3"}
+
+@app.get("/hc")
+async def root():
+    return {"Message": "Healthy"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
