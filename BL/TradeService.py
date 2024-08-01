@@ -21,7 +21,7 @@ def sign(data):
 
 def GetServerTime():
     # check server time
-    response = requests.get(url + '/api/servertime')
+    response = requests.get(url + '/api/v3/servertime')
     return int(response.text)
 
 def GetLatestPrice(name):
