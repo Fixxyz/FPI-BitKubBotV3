@@ -42,7 +42,7 @@ def GetMyBalances():
     }
     signature = sign(data)
     data['sig'] = signature
-    response = requests.post(url + '/api/market/wallet', headers=header, data=json_encode(data))
+    response = requests.post(url + '/api/v3/market/wallet', headers=header, data=json_encode(data))
     print(response.text)
     return json.loads(response.text)
 def GetMyOpenOrder(symbol):
@@ -59,7 +59,7 @@ def GetMyOpenOrder(symbol):
     }
     signature = sign(data)
     data['sig'] = signature
-    response = requests.post(url + '/api/market/my-open-orders', headers=header, data=json_encode(data))
+    response = requests.post(url + '/api/v3/market/my-open-orders', headers=header, data=json_encode(data))
     print(response.text)
     return json.loads(response.text)
 
@@ -80,7 +80,7 @@ def BuyOrder(symbol,amt,rat):
     }
     signature = sign(data)
     data['sig'] = signature
-    response = requests.post(url + '/api/market/v2/place-bid', headers=header, data=json_encode(data))
+    response = requests.post(url + '/api/v3/market/place-bid', headers=header, data=json_encode(data))
     print(response.text)
     return json.loads(response.text)
 def SellOrder(symbol,amt,rat):
@@ -100,7 +100,7 @@ def SellOrder(symbol,amt,rat):
     }
     signature = sign(data)
     data['sig'] = signature
-    response = requests.post(url + '/api/market/v2/place-ask', headers=header, data=json_encode(data))
+    response = requests.post(url + '/api/v3/market/place-ask', headers=header, data=json_encode(data))
     print(response.text)
     return json.loads(response.text)
 def CancelOrder(symbol,id,sd,hashkey):
@@ -121,7 +121,7 @@ def CancelOrder(symbol,id,sd,hashkey):
     }
     signature = sign(data)
     data['sig'] = signature
-    response = requests.post(url + '/api/market/v2/cancel-order', headers=header, data=json_encode(data))
+    response = requests.post(url + '/api/v3/market/cancel-order', headers=header, data=json_encode(data))
     print(response.text)
     return json.loads(response.text)
 
