@@ -19,10 +19,18 @@ def sign(data):
 	h = hmac.new(secret, msg=j.encode(), digestmod=hashlib.sha256)
 	return h.hexdigest()
 
+def gen_sign(api_secret, payload_string=None):
+    return hmac.new(api_secret, payload_string.encode('utf-8'), hashlib.sha256).hexdigest()
+
+def gen_query_param(url, query_param):
+    req = requests.PreparedRequest()
+    req.prepare_url(url, query_param)
+    return req.url.replace(url,"")
+
 def GetServerTime():
     # check server time
     response = requests.get(url + '/api/v3/servertime')
-    return int(response.text)
+    return response.text
 
 def GetLatestPrice(name):
     # get latest price
@@ -30,98 +38,120 @@ def GetLatestPrice(name):
     result = json.loads(response.text)
     return result[name]['last']
 def GetMyBalances():
+    path = '/api/v3/market/wallet'
     ts = GetServerTime()
+    payload = []
+    payload.append(ts)
+    payload.append('POST')
+    payload.append(path)
+    signature = gen_sign(secret,''.join(payload))
     # check balances
     header = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'X-BTK-APIKEY': key,
+        'X-BTK-TIMESTAMP': ts,
+        'X-BTK-SIGN': signature
     }
-    data = {
-        'ts': ts,
-    }
-    signature = sign(data)
-    data['sig'] = signature
-    response = requests.post(url + '/api/v3/market/wallet', headers=header, data=json_encode(data))
+    response = requests.post(url + path, headers=header,data={})
     print(response.text)
     return json.loads(response.text)
 def GetMyOpenOrder(symbol):
+    path = '/api/v3/market/my-open-orders'
     ts = GetServerTime()
+    param = {
+        'sym': symbol
+    }
+    query_param = gen_query_param(url+path, param)
+    payload = []
+    payload.append(ts)
+    payload.append('GET')
+    payload.append(path)
+    payload.append(query_param)
+    signature = gen_sign(secret,''.join(payload))
     # check balances
     header = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'X-BTK-APIKEY': key,
+        'X-BTK-TIMESTAMP': ts,
+        'X-BTK-SIGN': signature
     }
-    data = {
-        'ts': ts,
-        'sym': symbol
-    }
-    signature = sign(data)
-    data['sig'] = signature
-    response = requests.post(url + '/api/v3/market/my-open-orders', headers=header, data=json_encode(data))
+    response = requests.get(url + path + query_param, headers=header)
     print(response.text)
     return json.loads(response.text)
 
 def BuyOrder(symbol,amt,rat):
     ts = GetServerTime()
-    # check balances
-    header = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-BTK-APIKEY': key,
-    }
+    path = '/api/v3/market/place-bid'
     data = {
-        'ts': ts,
        	'sym': symbol,
         'amt': amt,
         'rat': rat,
         'typ': 'limit',
     }
-    signature = sign(data)
-    data['sig'] = signature
-    response = requests.post(url + '/api/v3/market/place-bid', headers=header, data=json_encode(data))
+    payload = []
+    payload.append(ts)
+    payload.append('POST')
+    payload.append(path)
+    payload.append(json.dumps(data))
+
+    signature = gen_sign(secret, ''.join(payload))
+    # check balances
+    header = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-BTK-APIKEY': key,
+        'X-BTK-TIMESTAMP': ts,
+        'X-BTK-SIGN': signature
+    }
+    response = requests.post(url + path, headers=header, data=json_encode(data))
     print(response.text)
     return json.loads(response.text)
 def SellOrder(symbol,amt,rat):
     ts = GetServerTime()
-    # check balances
-    header = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-BTK-APIKEY': key,
-    }
+    path = '/api/v3/market/place-ask'
     data = {
-        'ts': ts,
        	'sym': symbol,
         'amt': amt,
         'rat': rat,
         'typ': 'limit',
     }
-    signature = sign(data)
-    data['sig'] = signature
-    response = requests.post(url + '/api/v3/market/place-ask', headers=header, data=json_encode(data))
-    print(response.text)
-    return json.loads(response.text)
-def CancelOrder(symbol,id,sd,hashkey):
-    ts = GetServerTime()
+    payload = []
+    payload.append(ts)
+    payload.append('POST')
+    payload.append(path)
+    payload.append(json.dumps(data))
+    signature = gen_sign(secret, ''.join(payload))
     # check balances
     header = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'X-BTK-APIKEY': key,
+        'X-BTK-TIMESTAMP': ts,
+        'X-BTK-SIGN': signature
     }
+    response = requests.post(url + path, headers=header, data=json_encode(data))
+    print(response.text)
+    return json.loads(response.text)
+def CancelOrder(symbol,id,sd,hashkey):
+    ts = GetServerTime()
+    path = '/api/v3/market/cancel-order'
     data = {
-        'ts': ts,
        	'sym': symbol,
         'id': id,
         'sd': sd,
-        'hash ': hashkey,
-        'typ': 'limit',
+        'hash ': hashkey
     }
-    signature = sign(data)
-    data['sig'] = signature
-    response = requests.post(url + '/api/v3/market/cancel-order', headers=header, data=json_encode(data))
+    # check balances
+    header = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-BTK-APIKEY': key,
+        'X-BTK-TIMESTAMP': ts,
+        'X-BTK-SIGN': signature
+    }
+    response = requests.post(url + path, headers=header, data=json_encode(data))
     print(response.text)
     return json.loads(response.text)
 
@@ -146,7 +176,7 @@ def CryptoTrade(targetname, targetprofit, targetlost, buyprice):
         profitcal = latestprice + targetprofit
         print(f'ProfitCal = {profitcal}')
     # Get Pending Order
-    orders = GetMyOpenOrder(symbol)
+    orders = GetMyOpenOrder(targetname.lower()+'_thb')
     print(f'My pending order = {orders}')
     if(any(orders['result'])):
         for order in orders['result']:
@@ -160,28 +190,28 @@ def CryptoTrade(targetname, targetprofit, targetlost, buyprice):
             if(ordertype == 'SELL'):
                 if(diff >= targetprofit):
                     # Cancel Order
-                    CancelOrder(symbol,id,ordertype,hashkey)
+                    CancelOrder(targetname.lower()+'_thb',id,ordertype,hashkey)
                     msg = f'Order {targetname} Was Cancel Sell'
                     print(msg)
                     SendLineNotify(msg)
             if(ordertype == 'BUY'):
                 if(diff >= targetlost):
                     # Cancel Order
-                    CancelOrder(symbol,id,ordertype,hashkey)
+                    CancelOrder(targetname.lower()+'_thb',id,ordertype,hashkey)
                     msg = f'Order {targetname} Was Cancel Buy'
                     print(msg)
                     SendLineNotify(msg)
 
     # balance > 0 place order
     if(balance > 0):
-        BuyOrder(symbol, balance, rate)
+        BuyOrder(targetname.lower()+'_thb', balance, rate)
         msg = f'Create Buy Order {targetname} with rate = {rate} balance = {balance}'
         print(msg)
         SendLineNotify(msg)
 
     elif (amt > 0):
         # Create SELL Order
-        SellOrder(symbol, amt, profitcal)
+        SellOrder(targetname.lower()+'_thb', amt, profitcal)
         msg = f'Create Sell Order {targetname} with rate = {profitcal} balance = {balance}'
         print(msg)
         SendLineNotify(msg)
