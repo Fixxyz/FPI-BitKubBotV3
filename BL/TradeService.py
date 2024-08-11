@@ -105,7 +105,7 @@ def BuyOrder(symbol,amt,rat):
         'X-BTK-TIMESTAMP': ts,
         'X-BTK-SIGN': signature
     }
-    response = requests.post(url + path, headers=header, data=json_encode(data))
+    response = requests.post(url + path, headers=header, data=json.dumps(data))
     print(response.text)
     return json.loads(response.text)
 def SellOrder(symbol,amt,rat):
@@ -131,7 +131,7 @@ def SellOrder(symbol,amt,rat):
         'X-BTK-TIMESTAMP': ts,
         'X-BTK-SIGN': signature
     }
-    response = requests.post(url + path, headers=header, data=json_encode(data))
+    response = requests.post(url + path, headers=header, data=json.dumps(data))
     print(response.text)
     return json.loads(response.text)
 def CancelOrder(symbol,id,sd,hashkey):
@@ -151,7 +151,7 @@ def CancelOrder(symbol,id,sd,hashkey):
         'X-BTK-TIMESTAMP': ts,
         'X-BTK-SIGN': signature
     }
-    response = requests.post(url + path, headers=header, data=json_encode(data))
+    response = requests.post(url + path, headers=header, data=json.dumps(data))
     print(response.text)
     return json.loads(response.text)
 
